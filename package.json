@@ -1,0 +1,13 @@
+{
+  "name": "fc",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "http://godara17.github.io/url-form",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "express": "^4.16.4"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}

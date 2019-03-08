@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+   <meta charset="utf-8" />
+   <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" />
+   <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+   <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+</head>
+
+<body>
+  <div class="main-container">
+    <div class="form-container">
+      <h2 class="header">Form</h2><br/><br/><br/>
+      <ul id="sortable" class="sortable-ul"></ul>
+      <div class="add-container"><button id="addBtn" class="add-button">Add</button></div><br/><br/><br/>
+      <button id="fetchBtn" class="fetch-button">Fetch</button><br/><br/>
+      <label class="progress-label"></label><br/><br/>
+    </div>
+    <br/><br/>
+    <div class="urls-title-container"></div>
+  </div>
+</body>
+</html>
+
+<script>
+  $(function() {
+    $( "#sortable" ).disableSelection();
+    $('#sortable').sortable({ cancel: '.input-container' });
+
+    $('#sortable').append(createUrlComponent(1));
+
+    $('#addBtn').click(function() {
+      let urlCount = $(".sortable-li").map(()=>{return this.innerHTML;}).get().length;
+
+      curUrl = $('#input-' + urlCount).val()
+      if (validateUrl(curUrl)) {
+        div = createUrlComponent(urlCount+1);
+        $('#sortable').append(div);
+      }
+    });
+
+    $('#fetchBtn').click(function() {
+      $('.urls-title-container').empty();
+      let urls = []
+
+      let invalidUrl = false
+      $('.input_type').each(function(i, obj) {
+        if (validateUrl(obj.value)) {
+          urls.push(obj.value)  
+        }
+        else {
+          invalidUrl = true
+        }
+      })
+
+      if (invalidUrl)
+        return
+      
+      $('#fetchBtn').html('Fetching')
+              
+      const count = urls.length
+      let progressCnt = 0
+
+      urls.forEach((url)=>{
+        $.ajax({
+          type: 'get',
+          url: 'fetch_urls',
+          data : {"url": url},
+          contentType: "application/json; charset=utf-8",
+          dataType: "json",
+          
+          success: function(data) {
+            progressCnt++
+            updateProgress(Math.round((progressCnt*100)/count))
+            addUrlTitle(progressCnt, url, data[url])
+            if (progressCnt == count)
+              $('#fetchBtn').html('Fetch')
+          },
+          error: function(data) {
+            progressCnt++
+            updateProgress(Math.round((progressCnt*100)/count))
+            addUrlTitle(progressCnt, url, data[url])
+            if (progressCnt == count)
+              $('#fetchBtn').html('Fetch')
+          }
+        });
+      })
+    });
+
+    function createUrlComponent(urlCount) {
+      let div = $("<li>", {id: "url-" + (urlCount), "class": "sortable-li"});
+      let id = "\"" + ("input-" + (urlCount)) + "\"";
+      let ph = "\"" + ("Enter URL " + (urlCount)) + "\"";
+      let img_container = $('<div class="image-container"><img id="handle_image" class="handle-image" src="./menu.png" alt="Menu Image" height="25" width="25"/></div>');
+      let input_container = $('<div class="input-container"><input id=' + id + ' class="input_type" type="input" placeholder=' + ph +'/></div>');
+      div.append(img_container, input_container);
+      return div;
+    };
+
+    function updateProgress(value) {
+      $(".progress-label").text(value + "% completed")
+    }
+
+    function addUrlTitle(count, url, res) {
+      div = $("<label>", {id: "url-" + (count), "class": "title-label", "text": url + " --> " + res});
+      $('.urls-title-container').append(div);
+      $('.urls-title-container').append("<br/><br/>");
+    }
+
+    function validateUrl(url) {
+      if (url.length == 0) {
+        alert("Url field should not be empty");
+        return false
+      }
+      if (!((url.startsWith("http://www.") && url.length > 11)  || (url.startsWith("www.") && url.length > 4))) {
+          alert("A valid url must start with http://www. or www.");
+          return false
+      }
+      return true
+    }
+});
+
+</script>
+<style>
+
+  .main-container {
+    min-height: 300px;
+    margin: 3% 3% 0 3%;
+  }
+
+  .header {
+    position: relative;
+    top: 50px;
+    margin-left: 6%;
+  }
+
+  .form-container {
+    width: 100%;
+    display: inline-block;
+    background-color: #f1f1f1;
+  }
+
+  .sortable-ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 50%;
+    display: inline-block;
+  }
+
+  .sortable-li {
+    border: none;
+    margin: 0 3px 3px 3px;
+    padding: 0.4em;
+    padding-left: 1em;
+    font-size: 1.4em;
+    height: 50px;
+    width: 100%;
+    display: inline-block;
+  }
+
+  .image-container {
+    width: 5%;
+    display: inline-block;
+  }
+
+  .input-container {
+    width: 90%;
+    display: inline-block;
+    text-align: center;
+    margin-left: 15px;
+  }
+
+  .input_type {
+    display: inline-block;
+    height: 40px;
+    width: 100%;
+    border-radius: 15px;
+    border-style: solid;
+    border-color: #c0bfbf;
+    display: inline-block;
+    text-align: left;
+    font-size: 20px;
+    padding: 10px;
+  }
+
+  .add-container {
+    width: 10%;
+    display: inline-block;
+    margin-left: 5%
+  }
+
+  .add-button {
+    background-color: white;
+    border-color: #4bd19b;
+    padding: 10px;
+    font-size: 20px; 
+    text-align: center;
+    border-radius: 5px;
+    color: #4bd19b;
+  }
+
+  .fetch-button {
+    background-color: #4bd19b;
+    padding: 10px;
+    font-size: 20px; 
+    text-align: center;
+    border-radius: 5px;
+    color: white;
+    margin-left: 6%;
+  }
+
+  *:focus {
+    outline: none;
+  }
+
+  .progress-label {
+    padding: 10px;
+    font-size: 15px; 
+    text-align: center;
+    color: #4bd19b;
+    margin-left: 6%;
+  }
+
+  .title-label {
+    padding: 10px;
+    font-size: 15px; 
+    text-align: center;
+    color: black;
+    margin-left: 6%;
+  }
+
+  @media only screen and (max-width: 768px) {
+    [class*="sortable-ul"] {
+      width: 70%;
+    }
+    [class*="add-container"] {
+      width: 20%;
+    }
+    
+    [class*="input-container"] {
+      width: 70%;
+    }
+  }
+</style>
