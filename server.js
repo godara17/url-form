@@ -16,9 +16,14 @@ app.get('/', (req, res) => {
 app.get('/fetch_urls', (req, res) => {
     let url = req.query.url
     let fUrl = url
-    if (! url.startsWith("http://"))
-        fUrl = "http://" + url        
+    let extUrl = url
+
+    if (extUrl.startsWith("http://"))
+        extUrl = extUrl.substring(7)
+    if (extUrl.startsWith("www."))
+        extUrl = extUrl.substring(4)
     
+    fUrl = "http://www." + extUrl
     
     request(fUrl, function (error, response, body) {
         let data = {}
